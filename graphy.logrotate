@@ -1,0 +1,6 @@
+%ROOT_DIR%/*.csv {
+  weekly
+  rotate 4
+  missingok
+  notifempty
+}

@@ -45,6 +45,20 @@ end
 case ARGV.first
   when "install"
     begin
+      if File.directory?("/etc/logrotate.d")
+        File.open("/etc/logrotate.d/graphy", "w") do |f|
+          logrotate = File.read("graphy.logrotate").gsub(/%ROOT_DIR%/, ROOT_DIR)
+          f.write(logrotate)
+        end
+      else
+        puts "Warning: /etc/logrotate.d doesn't exist - Graphy log files at #{ROOT_DIR}/*.csv won't be rotated."
+      end
+    rescue SystemCallError
+      puts "/etc/logrotate.d/graphy can't be created - run this command with 'sudo' or 'rvmsudo'"
+      exit 1
+    end
+
+    begin
       Dir.mkdir(ROOT_DIR) unless File.directory?(ROOT_DIR)
     rescue SystemCallError
       puts "#{ROOT_DIR} can't be created - run this command with 'sudo' or 'rvmsudo'"
@@ -61,6 +75,7 @@ case ARGV.first
         gid = `id -g #{real_user}`.to_i
         files = FILES.map { |f| File.join(ROOT_DIR, f) }
         File.chown(uid, gid, ROOT_DIR, *files)
+        File.chown(uid, gid, "/etc/logrotate.d/graphy") if File.exist?("/etc/logrotate.d/graphy")
       end
     end
 
