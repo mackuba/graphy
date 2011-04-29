@@ -28,12 +28,12 @@ module Graphy
         sum = 0
         ps.each_line do |line|
           if line.include?(process.name)
-            value = line.strip.split(/\s+/).first.to_i
-            value = value.to_f / divisor if divisor
+            value = line.strip.split(/\s+/).first.to_f
+            value /= divisor if divisor
             sum += value
           end
         end
-        divisor ? sprintf("%.1f", sum) : sum
+        divisor ? sprintf("%.1f", sum) : sum.to_i
       end
     end
   end
