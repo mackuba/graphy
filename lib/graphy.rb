@@ -1,1 +1,1 @@
-require 'graphy/graphy'
+require 'graphy/commands'

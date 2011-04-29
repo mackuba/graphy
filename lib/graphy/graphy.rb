@@ -1,192 +1,221 @@
 #!/usr/bin/env ruby
 
 require 'fileutils'
-
-ROOT_DIR = ENV['GRAPHY_DIR'] || "/var/lib/graphy"
-TEMPLATE_DIR = File.expand_path(File.join(__FILE__, '..', '..', 'templates'))
-FILES = ["graphy.conf", "index.html", "graphy.js", "dygraph-combined.js"]
+require 'commander/import'
+require 'graphy/config'
 
 module Graphy
-  class Process
-    attr_accessor :name, :options
+  ROOT_DIR = ENV['GRAPHY_DIR'] || "/var/lib/graphy"
+  TEMPLATE_DIR = File.expand_path(File.join(__FILE__, '..', '..', 'templates'))
+  LOGROTATE_DIR = "/etc/logrotate.d"
 
-    def initialize(name, options = {})
-      @name = name.to_s
-      @options = options
-    end
-  end
+  CONFIG_FILE_NAME = "graphy.conf"
+  LOGROTATE_FILE_NAME = "graphy"
+  STATIC_FILES = ["index.html", "graphy.js", "dygraph-combined.js"]
+  FILES = STATIC_FILES + [CONFIG_FILE_NAME]
 
-  class Config
-    def initialize(parent)
-      @parent = parent
-    end
+  CONFIG_FILE = File.join(ROOT_DIR, CONFIG_FILE_NAME)
+  LOGROTATE_FILE = File.join(LOGROTATE_DIR, LOGROTATE_FILE_NAME)
 
-    def schedule(string)
-      @parent.schedule = string
-    end
+  GRAPHY_CRONTAB_MARKER = "# graphy gem"
 
-    def process(name, options = {})
-      @parent.processes << Process.new(name, options)
-    end
-  end
+  CREATE = $terminal.color("  create", :green)
+  UPDATE = $terminal.color("  update", :green)
+  IGNORE = $terminal.color("  ignore", :yellow)
+  REMOVE = $terminal.color("  remove", :red)
 
   class << self
-    attr_accessor :schedule, :processes
-
-    def processes
-      @processes ||= []
-    end
-
-    def configure
-      yield Config.new(self)
-    end
-  end
-end
-
-case ARGV.first
-  when "install"
-    begin
-      if File.directory?("/etc/logrotate.d")
-        File.open("/etc/logrotate.d/graphy", "w") do |f|
-          logrotate = File.read(File.join(TEMPLATE_DIR, "graphy.logrotate")).gsub(/%ROOT_DIR%/, ROOT_DIR)
-          f.write(logrotate)
-        end
+    def init
+      if File.directory?(LOGROTATE_DIR)
+        copy_template("graphy.logrotate", :to => LOGROTATE_DIR, :as => LOGROTATE_FILE_NAME)
       else
-        puts "Warning: /etc/logrotate.d doesn't exist - Graphy log files at #{ROOT_DIR}/*.csv won't be rotated."
+        puts "Warning: #{LOGROTATE_DIR} doesn't exist - Graphy log files at #{ROOT_DIR}/*.csv won't be rotated."
       end
-    rescue SystemCallError
-      puts "/etc/logrotate.d/graphy can't be created - run this command with 'sudo' or 'rvmsudo'"
-      exit 1
-    end
 
-    begin
-      Dir.mkdir(ROOT_DIR) unless File.directory?(ROOT_DIR)
-    rescue SystemCallError
-      puts "#{ROOT_DIR} can't be created - run this command with 'sudo' or 'rvmsudo'"
-      exit 1
-    end
+      create_root_directory
+      STATIC_FILES.each { |f| copy_template(f) }
 
-    # ask to overwrite
-    (FILES - ["graphy.conf"]).each { |f| FileUtils.cp(File.join(TEMPLATE_DIR, f), ROOT_DIR) }
+      if File.exist?(CONFIG_FILE)
+        log IGNORE, CONFIG_FILE
+      else
+        copy_template(CONFIG_FILE_NAME)
+      end
 
-    if File.exist?(File.join(ROOT_DIR, "graphy.conf"))
-      puts "#{File.join(ROOT_DIR, "graphy.conf")} already exists - delete it and try again if you want to recreate it."
-    else
-      FileUtile.cp(File.join(TEMPLATE_DIR, "graphy.conf"), ROOT_DIR)
-    end
+      if ::Process.euid == 0 && (username = ENV['SUDO_USER'])
+        user_files = FILES.map { |f| user_file(f) }
 
-    if Process.euid == 0
-      real_user = ENV['SUDO_USER']
-      if real_user
-        uid = `id -u #{real_user}`.to_i
-        gid = `id -g #{real_user}`.to_i
-        files = FILES.map { |f| File.join(ROOT_DIR, f) }
-        File.chown(uid, gid, ROOT_DIR, *files)
-        File.chown(uid, gid, "/etc/logrotate.d/graphy") if File.exist?("/etc/logrotate.d/graphy")
+        change_owner(username, [ROOT_DIR] + files)
+        change_owner(username, LOGROTATE_FILE) if File.exist?(LOGROTATE_FILE)
       end
     end
 
-  when "log"
-    unless File.exist?(File.join(ROOT_DIR, "graphy.conf"))
-      puts "No graphy.conf file - please run install."
+    def update
+      load_config
+
+      if Graphy.schedule.nil?
+        fail "No schedule - please update your graphy.conf."
+      end
+
+      crontab = load_crontab
+      old_line = find_graphy_crontab_line(crontab)
+
+      if old_line
+        log UPDATE, "crontab entry"
+        old_line.replace(graphy_crontab_line)
+      else
+        log CREATE, "crontab entry"
+        crontab << graphy_crontab_line
+      end
+
+      save_crontab(crontab)
+      update_logs
+    end
+
+    def disable
+      crontab = load_crontab
+      old_line = find_graphy_crontab_line(crontab)
+
+      if old_line
+        log REMOVE, "crontab entry"
+        crontab.delete(old_line)
+        save_crontab(crontab)
+      end
+    end
+
+    def purge
+      if File.directory?(ROOT_DIR) && ask("Deleting all data - are you sure? (y/n) ")
+        Dir[ROOT_DIR + "/*"].each { |f| File.unlink(f) }
+        Dir.rmdir(ROOT_DIR)
+      end
+    rescue SystemCallError
+      sudo_fail "#{ROOT_DIR} can't be deleted"
+    end
+
+    def add_data_line
+      load_config
+
+      data = [Time.now.to_i]
+      labels = ['time']
+
+      Graphy.processes.each do |process|
+        ps = `ps ax -o rss,command`
+        sum = 0
+        ps.each_line do |line|
+          if line.include?(process.name)
+            sum += line.strip.split(/\s+/)[0].to_i
+          end
+        end
+        data << sum
+        labels << process.name
+      end
+
+      csv = user_file("log.csv")
+      existed = File.exist?(csv)
+
+      File.open(csv, "a") do |f|
+        f.puts(labels.join(",")) unless existed
+        f.puts(data.join(","))
+      end
+    end
+
+    def start_server
+      # TODO: switch to something less shitty
+      require 'webrick'
+      server = WEBrick::HTTPServer.new :Port => 8000, :DocumentRoot => ROOT_DIR
+      server.start
+    end
+
+
+    private
+
+    def create_root_directory
+      unless File.directory?(ROOT_DIR)
+        log CREATE, ROOT_DIR
+        Dir.mkdir(ROOT_DIR)
+      end
+    rescue SystemCallError
+      sudo_fail "#{ROOT_DIR} can't be created"
+    end
+
+    def copy_template(name, options = {})
+      directory = options[:to] || ROOT_DIR
+      new_name = options[:as] || name
+      path = File.join(directory, new_name)
+      template = original_file(name)
+
+      log CREATE, path
+      File.open(path, "w") do |f|
+        contents = File.read(template).gsub(/\#\{(\w+)\}/) { $1.constantize }
+        f.write(contents)
+      end
+    rescue SystemCallError
+      sudo_fail "#{path} can't be created"
+    end
+
+    def fail(problem)
+      puts problem
       exit 1
     end
 
-    load File.join(ROOT_DIR, "graphy.conf")
+    def sudo_fail(problem)
+      fail "#{problem} - run this command with 'sudo' or 'rvmsudo'."
+    end
 
-    data = []
+    def change_owner(username, files)
+      uid = `id -u #{username}`.to_i
+      gid = `id -g #{username}`.to_i
+      files.each do |file|
+        log "chown", file
+        File.chown(uid, gid, file)
+      end
+    end
 
-    data << Time.now.to_i
+    def original_file(name)
+      File.join(TEMPLATE_DIR, name)
+    end
 
-    # memory_stats = `free -k -o | grep Mem`
-    # data << memory_stats.strip.split(/\s+/)[2].to_i
+    def user_file(name)
+      File.join(ROOT_DIR, name)
+    end
 
-    Graphy.processes.each do |process|
-      ps = `ps ax -o rss,command`
-      sum = 0
-      ps.each_line do |line|
-        if line.include?(process.name)
-          sum += line.strip.split(/\s+/)[0].to_i
+    def load_crontab
+      `crontab -l 2> /dev/null`.split(/\n/)
+    end
+
+    def save_crontab(crontab)
+      crontab_file = user_file("crontab")
+      File.open(crontab_file, "w") do |file|
+        crontab.each do |line|
+          file.puts(line)
         end
       end
-      data << sum
-    end
 
-    csv = File.join(ROOT_DIR, "log.csv")
-    existed = File.exist?(csv)
-
-    File.open(csv, "a") do |f|
-      f.write("time," + Graphy.processes.map(&:name).join(",") + "\n") unless existed
-      f.write(data.join(",") + "\n")
-    end
-
-  when "update"
-    # update csv
-    # update index / js
-
-    unless File.exist?(File.join(ROOT_DIR, "graphy.conf"))
-      puts "No graphy.conf file - please run install."
-      exit 1
-    end
-
-    load File.join(ROOT_DIR, "graphy.conf")
-
-    unless Graphy.schedule
-      puts "No schedule - please update your graphy.conf."
-      exit 1
-    end
-
-    crontab = `crontab -l 2> /dev/null`.split(/\n/)
-    old_line = crontab.grep(/# graphy gem/).first
-    rvm_path = ENV['rvm_path']
-    rvm_load = "source #{rvm_path}/scripts/rvm &&" if rvm_path
-    new_line = "#{Graphy.schedule}     #{rvm_load} graphy log   # graphy gem"
-
-    if old_line
-      old_line.replace(new_line)
-    else
-      crontab << new_line
-    end
-
-    crontab_file = File.join(ROOT_DIR, "crontab")
-    File.open(crontab_file, "w") { |f| f.write(crontab.map { |l| l + "\n" }.join) }
-    system("crontab #{crontab_file}")
-    File.unlink(crontab_file)
-
-    # update logs
-    Dir[ROOT_DIR + "/log.csv*"].each { |f| File.unlink(f) }
-
-  when "remove"
-    crontab = `crontab -l 2> /dev/null`.split(/\n/)
-    old_line = crontab.grep(/# graphy gem/).first
-
-    if old_line
-      crontab.delete(old_line)
-      crontab_file = File.join(ROOT_DIR, "crontab")
-      File.open(crontab_file, "w") { |f| f.write(crontab.map { |l| l + "\n" }.join) }
       system("crontab #{crontab_file}")
       File.unlink(crontab_file)
     end
 
-  when "server"
-    require 'webrick'
-    server = WEBrick::HTTPServer.new :Port => 8000, :DocumentRoot => ROOT_DIR
-    server.start
-
-  when "purge"
-    begin
-      if File.directory?(ROOT_DIR)
-        print "Deleting all data - are you sure? (y/n) "
-        if STDIN.gets.strip == "y"
-          Dir[ROOT_DIR + "/*"].each { |f| File.unlink(f) }
-          Dir.rmdir(ROOT_DIR)
-        end
-      end
-    rescue SystemCallError => e
-      puts "#{ROOT_DIR} can't be deleted - run this command with 'sudo' or 'rvmsudo'"
-      exit 1
+    def find_graphy_crontab_line(crontab)
+      crontab.detect { |l| l.include?(GRAPHY_CRONTAB_MARKER) }
     end
 
-  else
-    puts "#{$0} log|server|install"
+    def graphy_crontab_line
+      rvm_path = ENV['rvm_path']
+      rvm_load = "source #{rvm_path}/scripts/rvm &&" if rvm_path
+
+      "#{Graphy.schedule}     #{rvm_load} graphy log   #{GRAPHY_CRONTAB_MARKER}"
+    end
+
+    def load_config
+      if File.exist?(CONFIG_FILE)
+        load CONFIG_FILE
+      else
+        fail "No #{CONFIG_FILE_NAME} file - please run 'graphy install'."
+      end
+    end
+
+    def update_logs
+      # TODO: update logs instead of deleting them
+      Dir[ROOT_DIR + "/log.csv*"].each { |f| File.unlink(f) }
+    end
+  end
 end

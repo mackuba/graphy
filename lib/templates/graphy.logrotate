@@ -1,4 +1,4 @@
-%ROOT_DIR%/*.csv {
+#{ROOT_DIR}/*.csv {
   weekly
   rotate 4
   missingok
