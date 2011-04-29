@@ -8,8 +8,7 @@ program :help_formatter, :compact
 program :help, "Instructions", %(
   1. Run 'graphy init' to setup files and directories (rerun this after each gem update).
   2. Edit #{Graphy::CONFIG_FILE}, set your schedule and list processes to monitor.
-  3. Run 'graphy update' to enable monitoring (rerun this each time you modify the config file).
-)
+  3. Run 'graphy update' to enable monitoring (rerun this each time you modify the config file).)
 
 default_command :help
 
@@ -25,11 +24,15 @@ command :update do |c|
   c.action { Graphy.update }
 end
 
-command :disable do |c|
-  c.syntax = 'graphy disable'
+alias_command :enable, :update
+
+command :remove do |c|
+  c.syntax = 'graphy remove'
   c.summary = "Removes the crontab line that runs 'graphy log' (leaves all files unchanged)"
   c.action { Graphy.disable }
 end
+
+alias_command :disable, :remove
 
 command :purge do |c|
   c.syntax = 'graphy purge'
