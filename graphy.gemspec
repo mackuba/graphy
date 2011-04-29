@@ -13,6 +13,7 @@ Gem::Specification.new do |s|
   s.email = "jakub.suder@gmail.com"
 
   s.files = ['MIT-LICENSE', 'README.markdown', 'Changelog.markdown', 'Gemfile', 'Gemfile.lock'] + Dir['lib/**/*']
+  s.executables = ['graphy']
 
   s.add_dependency 'commander', '~> 4.0'
 end
