@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script type="text/javascript" src="dygraph-combined.js"></script>
+    <script type="text/javascript" src="memory.js"></script>
+    <style type="text/css">
+      body > div { border: 2px solid #ccc; margin-bottom: 4px; }
+    </style>
+  </head>
+  <body>
+    <p>
+      Hover over a graph to see exact values at a given time. Click and drag on a graph to select a range and zoom
+      into it. Double-click to zoom out. Change the value in bottom-left corner to display averages over given number
+      of points.
+    </p>
+    <script type="text/javascript">
+      for (var i = 0; i < 4; i++) {
+        Memory.drawGraph("log.csv" + ((i > 0) ? ("." + i) : ''));
+      }
+    </script>
+  </body>
+</html>
