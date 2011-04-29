@@ -66,7 +66,13 @@ case ARGV.first
     end
 
     # ask to overwrite
-    FILES.each { |f| FileUtils.cp(f, ROOT_DIR) }
+    (FILES - ["graphy.conf"]).each { |f| FileUtils.cp(f, ROOT_DIR) }
+
+    if File.exist?(File.join(ROOT_DIR, "graphy.conf"))
+      puts "#{File.join(ROOT_DIR, "graphy.conf")} already exists - delete it and try again if you want to recreate it."
+    else
+      FileUtile.cp("graphy.conf", ROOT_DIR)
+    end
 
     if Process.euid == 0
       real_user = ENV['SUDO_USER']
