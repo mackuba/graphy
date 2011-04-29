@@ -3,6 +3,7 @@
 require 'fileutils'
 require 'commander/import'
 require 'graphy/config'
+require 'graphy/monitors'
 
 module Graphy
   ROOT_DIR = ENV['GRAPHY_DIR'] || "/var/lib/graphy"
@@ -12,8 +13,8 @@ module Graphy
 
   CONFIG_FILE_NAME = "graphy.conf"
   LOGROTATE_FILE_NAME = "graphy"
-  STATIC_FILES = ["index.html", "graphy.js", "dygraph-combined.js"]
-  FILES = STATIC_FILES + [CONFIG_FILE_NAME]
+  ASSET_FILES = ["index.html", "graphy.js", "dygraph-combined.js"]
+  ALL_FILES = ASSET_FILES + [CONFIG_FILE_NAME]
 
   CONFIG_FILE = File.join(ROOT_DIR, CONFIG_FILE_NAME)
   LOGROTATE_FILE = File.join(LOGROTATE_DIR, LOGROTATE_FILE_NAME)
@@ -34,7 +35,6 @@ module Graphy
       end
 
       create_root_directory
-      STATIC_FILES.each { |f| copy_template(f) }
 
       if File.exist?(CONFIG_FILE)
         log IGNORE, CONFIG_FILE
@@ -43,9 +43,9 @@ module Graphy
       end
 
       if ::Process.euid == 0 && (username = ENV['SUDO_USER'])
-        user_files = FILES.map { |f| user_file(f) }
+        user_files = ALL_FILES.map { |f| user_file(f) }
 
-        change_owner(username, [ROOT_DIR] + files)
+        change_owner(username, [ROOT_DIR] + user_files)
         change_owner(username, LOGROTATE_FILE) if File.exist?(LOGROTATE_FILE)
       end
     end
@@ -53,9 +53,13 @@ module Graphy
     def update
       load_config
 
-      if Graphy.schedule.nil?
-        fail "No schedule - please update your graphy.conf."
+      if File.directory?(LOGROTATE_DIR)
+        copy_template("graphy.logrotate", :to => LOGROTATE_DIR, :as => LOGROTATE_FILE_NAME)
+      else
+        log IGNORE, LOGROTATE_DIR
       end
+
+      ASSET_FILES.each { |f| copy_template(f) }
 
       crontab = load_crontab
       old_line = find_graphy_crontab_line(crontab)
@@ -95,27 +99,22 @@ module Graphy
     def add_data_line
       load_config
 
-      data = [Time.now.to_i]
-      labels = ['time']
+      Graphy.monitoring_sets.each do |set|
+        data = [Time.now.to_i]
+        labels = ['time']
 
-      Graphy.processes.each do |process|
-        ps = `ps ax -o rss,command`
-        sum = 0
-        ps.each_line do |line|
-          if line.include?(process.name)
-            sum += line.strip.split(/\s+/)[0].to_i
-          end
+        set.processes.each do |process|
+          data << set.monitor.call(process, set)
+          labels << process.name
         end
-        data << sum
-        labels << process.name
-      end
 
-      csv = user_file("log.csv")
-      existed = File.exist?(csv)
+        csv = user_file("#{set.name}.csv")
+        existed = File.exist?(csv)
 
-      File.open(csv, "a") do |f|
-        f.puts(labels.join(",")) unless existed
-        f.puts(data.join(","))
+        File.open(csv, "a") do |f|
+          f.puts(labels.join(",")) unless existed
+          f.puts(data.join(","))
+        end
       end
     end
 
@@ -146,7 +145,7 @@ module Graphy
 
       log CREATE, path
       File.open(path, "w") do |f|
-        contents = File.read(template).gsub(/\#\{(\w+)\}/) { $1.constantize }
+        contents = File.read(template).gsub(/\{\{(.+?)\}\}/) { eval $1 }
         f.write(contents)
       end
     rescue SystemCallError
@@ -216,7 +215,7 @@ module Graphy
 
     def update_logs
       # TODO: update logs instead of deleting them
-      Dir[ROOT_DIR + "/log.csv*"].each { |f| File.unlink(f) }
+      Dir[ROOT_DIR + "/*.csv*"].each { |f| File.unlink(f) }
     end
   end
 end

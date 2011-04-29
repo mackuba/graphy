@@ -1,6 +1,6 @@
-#{ROOT_DIR}/*.csv {
-  weekly
-  rotate 4
+{{ Graphy::ROOT_DIR }}/*.csv {
+  {{ Graphy.rotate_period }}
+  rotate {{ Graphy.rotate_count }}
   missingok
   notifempty
 }

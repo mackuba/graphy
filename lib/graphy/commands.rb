@@ -22,7 +22,7 @@ end
 
 command :update do |c|
   c.syntax = 'graphy update'
-  c.summary = "Adds or updates a crontab line that runs 'graphy log' and updates your log files"
+  c.summary = "Updates crontab, your log files and logrotate config"
   c.action { Graphy.update }
 end
 
@@ -30,7 +30,7 @@ alias_command :enable, :update
 
 command :remove do |c|
   c.syntax = 'graphy remove'
-  c.summary = "Removes the crontab line that runs 'graphy log' (leaves all files unchanged)"
+  c.summary = "Removes the crontab line that runs graphy (leaves all files unchanged)"
   c.action { Graphy.disable }
 end
 

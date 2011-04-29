@@ -15,9 +15,10 @@
       of points.
     </p>
     <script type="text/javascript">
-      for (var i = 0; i < 4; i++) {
-        Graphy.drawGraph("log.csv" + ((i > 0) ? ("." + i) : ''));
-      }
+      Graphy.drawGraphs(
+        [{{ Graphy.monitoring_sets.map { |s| s.name.to_s.inspect }.join(',') }}],
+        {{ Graphy.rotate_count }}
+      );
     </script>
   </body>
 </html>
