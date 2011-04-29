@@ -8,10 +8,6 @@ var Graphy = {
     document.getElementsByTagName('body')[0].appendChild(div);
 
     new Dygraph(div, file, {
-      labels: [
-        "time", "websocket_server", "flash_policy", "resque", "bluepilld",
-        "redis-server", "mongodb", "Rack", "Passenger", "nginx"
-      ],
       labelsDivWidth: 150,
       labelsDivStyles: {
         'margin-left': '175px',
