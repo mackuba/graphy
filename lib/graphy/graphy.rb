@@ -150,7 +150,7 @@ module Graphy
 
       log CREATE, path
       File.open(path, "w") do |f|
-        contents = File.read(template).gsub(/\{\{(.+?)\}\}/) { eval $1 }
+        contents = File.read(template, :external_encoding => 'UTF-8').gsub(/\{\{(.+?)\}\}/) { eval $1 }
         f.write(contents)
       end
     rescue SystemCallError
