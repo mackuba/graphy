@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <script type="text/javascript" src="dygraph-combined.js"></script>
-    <script type="text/javascript" src="memory.js"></script>
+    <script type="text/javascript" src="graphy.js"></script>
     <style type="text/css">
       body > div { border: 2px solid #ccc; margin-bottom: 4px; }
     </style>
@@ -16,7 +16,7 @@
     </p>
     <script type="text/javascript">
       for (var i = 0; i < 4; i++) {
-        Memory.drawGraph("log.csv" + ((i > 0) ? ("." + i) : ''));
+        Graphy.drawGraph("log.csv" + ((i > 0) ? ("." + i) : ''));
       }
     </script>
   </body>

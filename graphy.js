@@ -1,10 +1,10 @@
-var Memory = {
+var Graphy = {
 
   GRAPH_WIDTH: 1000,
 
   drawGraph: function(file) {
     var div = document.createElement('div');
-    div.style.width = Memory.GRAPH_WIDTH + 'px';
+    div.style.width = Graphy.GRAPH_WIDTH + 'px';
     document.getElementsByTagName('body')[0].appendChild(div);
 
     new Dygraph(div, file, {

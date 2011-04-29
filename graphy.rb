@@ -2,10 +2,10 @@
 
 require 'fileutils'
 
-ROOT_DIR = "/var/lib/memory"
-FILES = ["memory.conf", "index.html", "memory.js", "dygraph-combined.js"]
+ROOT_DIR = "/var/lib/graphy"
+FILES = ["graphy.conf", "index.html", "graphy.js", "dygraph-combined.js"]
 
-module Memory
+module Graphy
   class Process
     attr_accessor :name, :options
 
@@ -65,12 +65,12 @@ case ARGV.first
     end
 
   when "log"
-    unless File.exist?(File.join(ROOT_DIR, "memory.conf"))
-      puts "No memory.conf file - please run install."
+    unless File.exist?(File.join(ROOT_DIR, "graphy.conf"))
+      puts "No graphy.conf file - please run install."
       exit 1
     end
 
-    load File.join(ROOT_DIR, "memory.conf")
+    load File.join(ROOT_DIR, "graphy.conf")
 
     data = []
 
@@ -79,7 +79,7 @@ case ARGV.first
     # memory_stats = `free -k -o | grep Mem`
     # data << memory_stats.strip.split(/\s+/)[2].to_i
 
-    Memory.processes.each do |process|
+    Graphy.processes.each do |process|
       ps = `ps ax -o rss,command`
       sum = 0
       ps.each_line do |line|
@@ -94,7 +94,7 @@ case ARGV.first
     existed = File.exist?(csv)
 
     File.open(csv, "a") do |f|
-      f.write("time," + Memory.processes.map(&:name).join(",") + "\n") unless existed
+      f.write("time," + Graphy.processes.map(&:name).join(",") + "\n") unless existed
       f.write(data.join(",") + "\n")
     end
 
@@ -102,23 +102,23 @@ case ARGV.first
     # update csv
     # update index / js
 
-    unless File.exist?(File.join(ROOT_DIR, "memory.conf"))
-      puts "No memory.conf file - please run install."
+    unless File.exist?(File.join(ROOT_DIR, "graphy.conf"))
+      puts "No graphy.conf file - please run install."
       exit 1
     end
 
-    load File.join(ROOT_DIR, "memory.conf")
+    load File.join(ROOT_DIR, "graphy.conf")
 
-    unless Memory.schedule
-      puts "No schedule - please update your memory.conf."
+    unless Graphy.schedule
+      puts "No schedule - please update your graphy.conf."
       exit 1
     end
 
     crontab = `crontab -l 2> /dev/null`.split(/\n/)
-    old_line = crontab.grep(/# memory gem/).first
+    old_line = crontab.grep(/# graphy gem/).first
     rvm_path = ENV['rvm_path']
     rvm_load = "source #{rvm_path}/scripts/rvm &&" if rvm_path
-    new_line = "#{Memory.schedule}     #{rvm_load} cd #{ROOT_DIR} && ruby log_memory.rb   # memory gem"
+    new_line = "#{Graphy.schedule}     #{rvm_load} graphy log   # graphy gem"
 
     if old_line
       old_line.replace(new_line)
@@ -136,7 +136,7 @@ case ARGV.first
 
   when "remove"
     crontab = `crontab -l 2> /dev/null`.split(/\n/)
-    old_line = crontab.grep(/# memory gem/).first
+    old_line = crontab.grep(/# graphy gem/).first
 
     if old_line
       crontab.delete(old_line)
