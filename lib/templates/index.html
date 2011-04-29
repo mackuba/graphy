@@ -17,7 +17,7 @@
     </p>
     <script type="text/javascript">
       Graphy.drawGraphs(
-        [{{ Graphy.monitoring_sets.map { |s| s.name.to_s.inspect }.join(',') }}],
+        [{{ Graphy.monitoring_sets.map { |s| [s.name.to_s, s.monitor.unit.to_s].inspect }.join(',') }}],
         {{ Graphy.rotate_count }}
       );
     </script>
