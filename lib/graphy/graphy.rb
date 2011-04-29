@@ -119,8 +119,13 @@ module Graphy
     end
 
     def start_server
-      # TODO: switch to something less shitty
       require 'webrick'
+
+      # fixes a conflict between Webrick and Rack that prevents Webrick from closing when CTRL-C is pressed
+      ['INT', 'TERM'].each do |signal|
+        Signal.trap(signal) { exit!(0) }
+      end
+
       server = WEBrick::HTTPServer.new :Port => 8000, :DocumentRoot => ROOT_DIR
       server.start
     end
