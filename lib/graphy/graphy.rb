@@ -8,6 +8,7 @@ module Graphy
   ROOT_DIR = ENV['GRAPHY_DIR'] || "/var/lib/graphy"
   TEMPLATE_DIR = File.expand_path(File.join(__FILE__, '..', '..', 'templates'))
   LOGROTATE_DIR = "/etc/logrotate.d"
+  NGINX_BASE_DIR = ROOT_DIR.chomp('/').split('/').slice(0..-2).join('/')
 
   CONFIG_FILE_NAME = "graphy.conf"
   LOGROTATE_FILE_NAME = "graphy"

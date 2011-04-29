@@ -8,7 +8,9 @@ program :help_formatter, :compact
 program :help, "Instructions", %(
   1. Run 'graphy init' to setup files and directories (rerun this after each gem update).
   2. Edit #{Graphy::CONFIG_FILE}, set your schedule and list processes to monitor.
-  3. Run 'graphy update' to enable monitoring (rerun this each time you modify the config file).)
+  3. Run 'graphy update' to enable monitoring (rerun this each time you modify the config file).
+  4. Run 'graphy config nginx' and paste the output into your Nginx config.
+  5. Access reports at http://your.server/graphy.)
 
 default_command :help
 
@@ -50,4 +52,16 @@ command :server do |c|
   c.syntax = 'graphy server'
   c.summary = "Starts a Webrick server in the graphy data directory to serve the log report on http://localhost:8000"
   c.action { Graphy.start_server }
+end
+
+command 'config nginx' do |c|
+  c.syntax = 'graphy config nginx'
+  c.summary = "Prints config lines to be added to Nginx config file"
+  c.action do
+    puts %(
+      location ~* ^\/graphy {
+        root #{Graphy::NGINX_BASE_DIR};
+      }
+    )
+  end
 end
