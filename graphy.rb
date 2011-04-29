@@ -2,7 +2,7 @@
 
 require 'fileutils'
 
-ROOT_DIR = "/var/lib/graphy"
+ROOT_DIR = ENV['GRAPHY_DIR'] || "/var/lib/graphy"
 FILES = ["graphy.conf", "index.html", "graphy.js", "dygraph-combined.js"]
 
 module Graphy
