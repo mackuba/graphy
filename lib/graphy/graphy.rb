@@ -43,9 +43,7 @@ module Graphy
       end
 
       if ::Process.euid == 0 && (username = ENV['SUDO_USER'])
-        user_files = ALL_FILES.map { |f| user_file(f) }
-
-        change_owner(username, [ROOT_DIR] + user_files)
+        change_owner(username, ROOT_DIR, CONFIG_FILE)
         change_owner(username, LOGROTATE_FILE) if File.exist?(LOGROTATE_FILE)
       end
     end
@@ -166,7 +164,7 @@ module Graphy
       fail "#{problem} - run this command with 'sudo' or 'rvmsudo'."
     end
 
-    def change_owner(username, files)
+    def change_owner(username, *files)
       uid = `id -u #{username}`.to_i
       gid = `id -g #{username}`.to_i
       files.each do |file|
