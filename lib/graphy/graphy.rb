@@ -3,6 +3,7 @@
 require 'fileutils'
 
 ROOT_DIR = ENV['GRAPHY_DIR'] || "/var/lib/graphy"
+TEMPLATE_DIR = File.expand_path(File.join(__FILE__, '..', '..', 'templates'))
 FILES = ["graphy.conf", "index.html", "graphy.js", "dygraph-combined.js"]
 
 module Graphy
@@ -47,7 +48,7 @@ case ARGV.first
     begin
       if File.directory?("/etc/logrotate.d")
         File.open("/etc/logrotate.d/graphy", "w") do |f|
-          logrotate = File.read("graphy.logrotate").gsub(/%ROOT_DIR%/, ROOT_DIR)
+          logrotate = File.read(File.join(TEMPLATE_DIR, "graphy.logrotate")).gsub(/%ROOT_DIR%/, ROOT_DIR)
           f.write(logrotate)
         end
       else
@@ -66,12 +67,12 @@ case ARGV.first
     end
 
     # ask to overwrite
-    (FILES - ["graphy.conf"]).each { |f| FileUtils.cp(f, ROOT_DIR) }
+    (FILES - ["graphy.conf"]).each { |f| FileUtils.cp(File.join(TEMPLATE_DIR, f), ROOT_DIR) }
 
     if File.exist?(File.join(ROOT_DIR, "graphy.conf"))
       puts "#{File.join(ROOT_DIR, "graphy.conf")} already exists - delete it and try again if you want to recreate it."
     else
-      FileUtile.cp("graphy.conf", ROOT_DIR)
+      FileUtile.cp(File.join(TEMPLATE_DIR, "graphy.conf"), ROOT_DIR)
     end
 
     if Process.euid == 0
