@@ -33,7 +33,7 @@ module Graphy
       if File.directory?(LOGROTATE_DIR)
         copy_template("graphy.logrotate", :to => LOGROTATE_DIR, :as => LOGROTATE_FILE_NAME)
       else
-        puts "Warning: #{LOGROTATE_DIR} doesn't exist - Graphy log files at #{ROOT_DIR}/*.csv won't be rotated."
+        log "Warning: #{LOGROTATE_DIR} doesn't exist - Graphy log files at #{ROOT_DIR}/*.csv won't be rotated."
       end
 
       create_root_directory
@@ -165,7 +165,7 @@ module Graphy
     end
 
     def fail(problem)
-      puts problem
+      log problem
       exit 1
     end
 
@@ -173,11 +173,15 @@ module Graphy
       fail "#{problem} - run this command with 'sudo' or 'rvmsudo'."
     end
 
-    def log(type, message)
-      color = LOG_COLORS[type]
-      label = color ? $terminal.color(type, color, :bold) : type
-      pad = " " * (12 - type.to_s.length)
-      say("#{pad}#{label}  #{message}")
+    def log(type, message = nil)
+      if message
+        color = LOG_COLORS[type]
+        label = color ? $terminal.color(type, color, :bold) : type
+        pad = " " * (12 - type.to_s.length)
+        say("#{pad}#{label}  #{message}")
+      else
+        puts type
+      end
     end
 
     def change_owner(username, *files)
@@ -253,8 +257,8 @@ module Graphy
       columns_to_add = new_labels - old_labels
       columns_to_remove = old_labels - new_labels
 
-      puts "\tColumns added: #{columns_to_add.inspect}" unless columns_to_add.empty?
-      puts "\tColumns removed: #{columns_to_remove.inspect}" unless columns_to_remove.empty?
+      log "\tColumns added: #{columns_to_add.inspect}" unless columns_to_add.empty?
+      log "\tColumns removed: #{columns_to_remove.inspect}" unless columns_to_remove.empty?
 
       old_indexes = new_labels.map { |label| old_labels.index(label) }
 
