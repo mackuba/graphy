@@ -6,15 +6,22 @@
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js"></script>
     <script type="text/javascript" src="graphy.js"></script>
     <style type="text/css">
-      body > div { border: 2px solid #ccc; margin-bottom: 4px; }
+      body { margin: 30px; width: 1000px; }
+      body > div { border: 2px solid #ccc; margin: 10px 0px; }
+      ul { list-style-position: inside; margin: 0px 0px 20px 15px; padding: 0px; }
+      li { margin: 3px 0px; }
     </style>
+    <title>Graphy {{ Graphy::VERSION }} report</title>
   </head>
   <body>
-    <p>
-      Hover over a graph to see exact values at a given time. Click and drag on a graph to select a range and zoom
-      into it. Double-click to zoom out. Change the value in bottom-left corner to display averages over given number
-      of points.
-    </p>
+    <h1>Graphy {{ Graphy::VERSION }} report</h1>
+
+    <ul>
+      <li>Hover over a graph to see exact values at a given time.</li>
+      <li>Click and drag on a graph to select a range and zoom into it. Double-click to zoom out.</li>
+      <li>Change the value in bottom-left corner to display averages over given number of points.</li>
+    </ul>
+
     <script type="text/javascript">
       Graphy.drawGraphs([
         {{ Graphy.monitoring_sets.map(&:to_json).join(",\n        ") }}
