@@ -54,6 +54,6 @@ module Graphy
     end
   end
 
-  add_monitor :memory, 'M', process_filter_monitor('rss', 1000)
+  add_monitor :memory, ' MB', process_filter_monitor('rss', 1000)
   add_monitor :cpu, '%', process_filter_monitor('pcpu')
 end
