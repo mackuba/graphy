@@ -1,5 +1,5 @@
 module Graphy
-  class Process
+  class Watch
     attr_accessor :name, :options
 
     def initialize(name, options = {})
@@ -9,17 +9,17 @@ module Graphy
   end
 
   class MonitoringSet
-    attr_accessor :name, :type, :processes
+    attr_accessor :name, :type, :watches
 
     def initialize(name, options = {})
       @name = name.to_s
       @type = options[:type] || @name.to_sym
-      @processes = []
+      @watches = []
       raise "Invalid monitor name: #{name}" if @name !~ /^[\w\-\.]+$/
     end
 
-    def process(name, options = {})
-      @processes << Process.new(name, options)
+    def watch(name, options = {})
+      @watches << Watch.new(name, options)
     end
 
     def monitor

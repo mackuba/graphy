@@ -8,8 +8,8 @@ module Graphy
       @block = block
     end
 
-    def call(process, set)
-      @block.call(process, set)
+    def call(watch, set)
+      @block.call(watch, set)
     end
   end
 
@@ -23,11 +23,11 @@ module Graphy
     end
 
     def process_filter_monitor(ps_field, divisor = nil)
-      Proc.new do |process, set|
+      Proc.new do |watch, set|
         ps = `ps ax -o #{ps_field},command`
         sum = 0
         ps.each_line do |line|
-          if line.include?(process.name)
+          if line.include?(watch.name)
             value = line.strip.split(/\s+/).first.to_f
             value /= divisor if divisor
             sum += value

@@ -42,7 +42,7 @@ module Graphy
         copy_template(CONFIG_FILE_NAME)
       end
 
-      if ::Process.euid == 0 && (username = ENV['SUDO_USER'])
+      if Process.euid == 0 && (username = ENV['SUDO_USER'])
         change_owner(username, ROOT_DIR, CONFIG_FILE)
         change_owner(username, LOGROTATE_FILE) if File.exist?(LOGROTATE_FILE)
       end
@@ -101,9 +101,9 @@ module Graphy
         data = [Time.now.to_i]
         labels = ['time']
 
-        set.processes.each do |process|
-          data << set.monitor.call(process, set)
-          labels << process.name
+        set.watches.each do |watch|
+          data << set.monitor.call(watch, set)
+          labels << watch.name
         end
 
         csv = user_file("#{set.name}.csv")
