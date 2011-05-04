@@ -21,10 +21,12 @@ module Graphy
 
   GRAPHY_CRONTAB_MARKER = "# graphy gem"
 
-  CREATE = $terminal.color("  create", :green)
-  UPDATE = $terminal.color("  update", :green)
-  IGNORE = $terminal.color("  ignore", :yellow)
-  REMOVE = $terminal.color("  remove", :red)
+  LOG_COLORS = {
+    :create => :green,
+    :update => :green,
+    :ignore => :yellow,
+    :remove => :red
+  }
 
   class << self
     def init
@@ -37,7 +39,7 @@ module Graphy
       create_root_directory
 
       if File.exist?(CONFIG_FILE)
-        log IGNORE, CONFIG_FILE
+        log :ignore, CONFIG_FILE
       else
         copy_template(CONFIG_FILE_NAME)
       end
@@ -54,7 +56,7 @@ module Graphy
       if File.directory?(LOGROTATE_DIR)
         copy_template("graphy.logrotate", :to => LOGROTATE_DIR, :as => LOGROTATE_FILE_NAME)
       else
-        log IGNORE, LOGROTATE_DIR
+        log :ignore, LOGROTATE_DIR
       end
 
       ASSET_FILES.each { |f| copy_template(f) }
@@ -63,10 +65,10 @@ module Graphy
       old_line = find_graphy_crontab_line(crontab)
 
       if old_line
-        log UPDATE, "crontab entry"
+        log :update, "crontab entry"
         old_line.replace(graphy_crontab_line)
       else
-        log CREATE, "crontab entry"
+        log :create, "crontab entry"
         crontab << graphy_crontab_line
       end
 
@@ -79,7 +81,7 @@ module Graphy
       old_line = find_graphy_crontab_line(crontab)
 
       if old_line
-        log REMOVE, "crontab entry"
+        log :remove, "crontab entry"
         crontab.delete(old_line)
         save_crontab(crontab)
       end
@@ -133,7 +135,7 @@ module Graphy
 
     def create_root_directory
       unless File.directory?(ROOT_DIR)
-        log CREATE, ROOT_DIR
+        log :create, ROOT_DIR
         Dir.mkdir(ROOT_DIR)
       end
     rescue SystemCallError
@@ -146,7 +148,7 @@ module Graphy
       path = File.join(directory, new_name)
       template = original_file(name)
 
-      log CREATE, path
+      log :create, path
       File.open(path, "w") do |f|
         contents = if String.new.respond_to?(:encoding)
           File.read(template, :external_encoding => 'UTF-8')
@@ -169,11 +171,18 @@ module Graphy
       fail "#{problem} - run this command with 'sudo' or 'rvmsudo'."
     end
 
+    def log(type, message)
+      color = LOG_COLORS[type]
+      label = color ? $terminal.color(type, color, :bold) : type
+      pad = " " * (12 - type.to_s.length)
+      say("#{pad}#{label}  #{message}")
+    end
+
     def change_owner(username, *files)
       uid = `id -u #{username}`.to_i
       gid = `id -g #{username}`.to_i
       files.each do |file|
-        log "chown", file
+        log :chown, file
         File.chown(uid, gid, file)
       end
     end
