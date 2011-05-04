@@ -64,16 +64,18 @@ module Graphy
       crontab = load_crontab
       old_line = find_graphy_crontab_line(crontab)
 
+      # disable crontab to make sure it doesn't add a line logs while we're updating them
       if old_line
-        log :update, "crontab entry"
-        old_line.replace(graphy_crontab_line)
-      else
-        log :create, "crontab entry"
-        crontab << graphy_crontab_line
+        crontab.delete(old_line)
+        save_crontab(crontab)
+        updated = true
       end
 
-      save_crontab(crontab)
       update_logs
+
+      log(updated ? :update : :create, "crontab entry")
+      crontab << graphy_crontab_line
+      save_crontab(crontab)
     end
 
     def disable
@@ -231,8 +233,41 @@ module Graphy
     end
 
     def update_logs
-      # TODO: update logs instead of deleting them
-      Dir[ROOT_DIR + "/*.csv*"].each { |f| File.unlink(f) }
+      Graphy.monitoring_sets.each do |set|
+        csv = user_file("#{set.name}.csv")
+        if File.exist?(csv)
+          log :update, csv
+          update_log(csv, set.watches.map(&:name))
+        else
+          log :ignore, csv
+        end
+      end
     end
+
+    def update_log(filename, new_labels)
+      data = File.read(filename)
+
+      old_labels = data.lines.first.strip.split(/,/)
+      new_labels = ['time'] + new_labels
+
+      columns_to_add = new_labels - old_labels
+      columns_to_remove = old_labels - new_labels
+
+      puts "\tColumns added: #{columns_to_add.inspect}" unless columns_to_add.empty?
+      puts "\tColumns removed: #{columns_to_remove.inspect}" unless columns_to_remove.empty?
+
+      old_indexes = new_labels.map { |label| old_labels.index(label) }
+
+      File.open(filename, "w") do |file|
+        file.puts(new_labels.join(','))
+
+        data.lines.to_a.slice(1..-1).each do |line|
+          old_values = line.strip.split(/,/)
+          new_values = old_indexes.map { |i| i ? old_values[i] : 0 }
+          file.puts(new_values.join(','))
+        end
+      end
+    end
+
   end
 end
