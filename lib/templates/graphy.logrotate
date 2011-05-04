@@ -3,4 +3,5 @@
   rotate {{ Graphy.rotate_count }}
   missingok
   notifempty
+  nocreate
 }
