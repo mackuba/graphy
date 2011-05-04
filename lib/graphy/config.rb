@@ -6,6 +6,10 @@ module Graphy
       @name = name.to_s
       @options = options
     end
+
+    def label
+      (@options[:label] || @name).to_s
+    end
   end
 
   class MonitoringSet
@@ -24,6 +28,10 @@ module Graphy
 
     def monitor
       Graphy.monitors[@type]
+    end
+
+    def to_json
+      %({"name": "#{name}", "unit": "#{monitor.unit}", "labels": #{watches.map(&:label).inspect}})
     end
   end
 

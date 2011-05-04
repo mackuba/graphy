@@ -16,10 +16,9 @@
       of points.
     </p>
     <script type="text/javascript">
-      Graphy.drawGraphs(
-        [{{ Graphy.monitoring_sets.map { |s| [s.name.to_s, s.monitor.unit.to_s].inspect }.join(',') }}],
-        {{ Graphy.rotate_count }}
-      );
+      Graphy.drawGraphs([
+        {{ Graphy.monitoring_sets.map(&:to_json).join(",\n        ") }}
+      ], {{ Graphy.rotate_count }});
     </script>
   </body>
 </html>
