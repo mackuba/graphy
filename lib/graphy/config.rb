@@ -58,6 +58,10 @@ module Graphy
       @parent.rotate_count = n
     end
 
+    def add_monitor(*args)
+      @parent.add_monitor(*args)
+    end
+
     def monitor(name, options = {})
       set = MonitoringSet.new(name, options)
       if set.monitor
