@@ -16,7 +16,9 @@ set up a monitor to check disk space used by several important directories on th
 types if the defaults (:cpu and :memory) aren't enough.
 
 The data is then displayed using an HTML page which includes some Javascripts that load the CSV files through XHR
-requests and use the data to generate graphs.
+requests and use the data to generate graphs, which look like this:
+
+<a href="https://github.com/psionides/graphy/raw/82f070991898/graphy_example.png"><img src="https://github.com/psionides/graphy/raw/82f070991898/graphy_example.png" width="880"></a>
 
 ## Installation
 
