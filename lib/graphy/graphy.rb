@@ -6,7 +6,10 @@ require 'graphy/config'
 require 'graphy/monitors'
 
 module Graphy
-  ROOT_DIR = ENV['GRAPHY_DIR'] || "/var/lib/graphy"
+  DEFAULT_ROOT_DIR = "/var/lib/graphy"
+  ROOT_DIR_PARAM = 'GRAPHY_DIR'
+  ROOT_DIR = ENV[ROOT_DIR_PARAM] || DEFAULT_ROOT_DIR
+
   TEMPLATE_DIR = File.expand_path(File.join(__FILE__, '..', '..', 'templates'))
   LOGROTATE_DIR = "/etc/logrotate.d"
   NGINX_BASE_DIR = ROOT_DIR.chomp('/').split('/').slice(0..-2).join('/')
@@ -240,8 +243,9 @@ module Graphy
     def graphy_crontab_line
       rvm_path = ENV['rvm_path']
       rvm_load = "source #{rvm_path}/scripts/rvm &&" if rvm_path
+      graphy_dir = "#{ROOT_DIR_PARAM}=#{ROOT_DIR}" unless ROOT_DIR == DEFAULT_ROOT_DIR
 
-      "#{Graphy.schedule}     /bin/bash -c \"#{rvm_load} graphy log\"   #{GRAPHY_CRONTAB_MARKER}"
+      "#{Graphy.schedule}     /bin/bash -c \"#{rvm_load} #{graphy_dir} graphy log\"   #{GRAPHY_CRONTAB_MARKER}"
     end
 
     def load_config
