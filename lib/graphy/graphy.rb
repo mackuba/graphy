@@ -128,7 +128,7 @@ module Graphy
         Signal.trap(signal) { exit!(0) }
       end
 
-      server = WEBrick::HTTPServer.new :Port => 8000, :DocumentRoot => ROOT_DIR
+      server = WEBrick::HTTPServer.new :Port => 8444, :DocumentRoot => ROOT_DIR
       server.start
     end
 
