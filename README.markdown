@@ -22,7 +22,7 @@ requests and use the data to generate graphs.
 
 First, install the gem on your server:
 
-    gem install graphy
+    gem install graphy --pre
 
 Then run the `init` command to initialize the required directories and files:
 
