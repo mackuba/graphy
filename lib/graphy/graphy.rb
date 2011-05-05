@@ -241,7 +241,7 @@ module Graphy
       rvm_path = ENV['rvm_path']
       rvm_load = "source #{rvm_path}/scripts/rvm &&" if rvm_path
 
-      "#{Graphy.schedule}     #{rvm_load} graphy log   #{GRAPHY_CRONTAB_MARKER}"
+      "#{Graphy.schedule}     /bin/bash -c \"#{rvm_load} graphy log\"   #{GRAPHY_CRONTAB_MARKER}"
     end
 
     def load_config
