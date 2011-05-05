@@ -29,9 +29,12 @@ Then run the `init` command to initialize the required directories and files:
     sudo graphy init    # or rvmsudo if you use rvm
 
 This will create a logrotate config for graphy at `/etc/logrotate.d/graphy` and a directory for storing config and data
-files at `/var/lib/graphy` (if you want, you can set a custom path instead with the environment variable `GRAPHY_DIR`).
-You need to run this command through sudo, because a standard user probably doesn't have write access to `/etc` and
-`/var/lib`.
+files at `/var/lib/graphy`. You need to run this command through sudo, because a standard user probably doesn't have
+write access to `/etc` and `/var/lib`.
+
+If you want, you can set a custom path instead of the standard `/var/lib/graphy` with the environment variable
+`GRAPHY_DIR` (note: with rvmsudo, you might need to call `rvmsudo GRAPHY_DIR=... graphy init`, variables set earlier
+don't seem to be passed – this might depend on your RVM version though).
 
 ## Configuration
 
