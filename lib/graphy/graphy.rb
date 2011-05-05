@@ -90,9 +90,20 @@ module Graphy
     end
 
     def purge
-      if File.directory?(ROOT_DIR) && ask("Deleting all data - are you sure? (y/n) ")
-        Dir[ROOT_DIR + "/*"].each { |f| File.unlink(f) }
-        Dir.rmdir(ROOT_DIR)
+      if ask("Deleting all data - are you sure? (y/n) ")
+        if File.directory?(ROOT_DIR)
+          Dir[ROOT_DIR + "/*"].each do |f|
+            log :remove, f
+            File.unlink(f)
+          end
+          log :remove, ROOT_DIR
+          Dir.rmdir(ROOT_DIR)
+        end
+
+        if File.exist?(LOGROTATE_FILE)
+          log :remove, LOGROTATE_FILE
+          File.unlink(LOGROTATE_FILE)
+        end
       end
     rescue SystemCallError
       sudo_fail "#{ROOT_DIR} can't be deleted"
