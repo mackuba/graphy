@@ -113,6 +113,11 @@ module Graphy
         csv = user_file("#{set.name}.csv")
         existed = File.exist?(csv)
 
+        if existed && File.mtime(CONFIG_FILE) > File.mtime(csv)
+          log "Error: #{csv} wasn't updated after a config modification, please run 'graphy update'."
+          return
+        end
+
         File.open(csv, "a") do |f|
           f.puts(labels.join(",")) unless existed
           f.puts(data.join(","))
@@ -255,6 +260,7 @@ module Graphy
 
       if old_labels == new_labels
         log :ignore, filename
+        FileUtils.touch(filename)
         return
       else
         log :update, filename
