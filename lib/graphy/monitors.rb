@@ -21,21 +21,21 @@ module Graphy
     #
     # usage:
     #
-    # Graphy.add_monitor(:disk_space, 'MB') do |watch, set|
-    #   result = `du -sm #{watch.name}`
-    #   result.split(/\s+/).first.to_i
-    # end
+    # Graphy.configure do |g|
+    #   g.add_monitor(:disk_space, 'MB') do |watch, set|
+    #     result = `du -sm #{watch.name}`
+    #     result.split(/\s+/).first.to_i
+    #   end
     #
-    # and then, in the config file:
-    #
-    # g.monitor :disk_space do |m|
-    #   m.watch "/var/lib/mongodb", :label => "MongoDB"
-    #   m.watch "/var/www/foo/shared/public", :label => "Uploaded files"
+    #   g.monitor :disk_space do |m|
+    #     m.watch "/var/lib/mongodb", :label => "MongoDB"
+    #     m.watch "/var/www/foo/shared/public", :label => "Uploaded files"
+    #   end
     # end
     #
 
-    def add_monitor(name, unit, proc = nil, &block)
-      monitors[name] = Monitor.new(name, unit, proc || block)
+    def add_monitor(name, unit, proc_or_block)
+      monitors[name] = Monitor.new(name, unit, proc_or_block)
     end
 
     def process_filter_monitor(ps_field, divisor = nil)

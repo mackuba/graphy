@@ -58,8 +58,8 @@ module Graphy
       @parent.rotate_count = n
     end
 
-    def add_monitor(*args)
-      @parent.add_monitor(*args)
+    def add_monitor(name, unit, proc = nil, &block)
+      @parent.add_monitor(name, unit, proc || block)
     end
 
     def monitor(name, options = {})
