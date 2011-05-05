@@ -74,7 +74,7 @@ Rack processes, it will write down how much memory they take together.
 
 If you want to have more than one monitoring set of the same kind, use the `:type` option:
 
-    g.monitor :system_processes, :type => memory do |m|
+    g.monitor :system_processes, :type => :memory do |m|
       m.watch "sshd"
       m.watch "ntpd"
       m.watch "cron"
@@ -133,7 +133,7 @@ This will delete the logrotate config file and entire `/var/lib/graphy` director
 If you need to monitor something else apart from memory and CPU usage, you can define a custom monitor type. For
 example, you could define a monitor that checks disk space usage in given directories:
 
-    g.add_monitor(:disk_space, 'MB') do |watch, set|
+    g.add_monitor :disk_space, 'MB' do |watch, set|
       result = `du -sm #{watch.name}`
       result.split(/\s+/).first.to_i
     end
