@@ -240,7 +240,6 @@ module Graphy
       Graphy.monitoring_sets.each do |set|
         csv = user_file("#{set.name}.csv")
         if File.exist?(csv)
-          log :update, csv
           update_log(csv, set.watches.map(&:name))
         else
           log :ignore, csv
@@ -253,6 +252,13 @@ module Graphy
 
       old_labels = data.lines.first.strip.split(/,/)
       new_labels = ['time'] + new_labels
+
+      if old_labels == new_labels
+        log :ignore, filename
+        return
+      else
+        log :update, filename
+      end
 
       columns_to_add = new_labels - old_labels
       columns_to_remove = old_labels - new_labels
