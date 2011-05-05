@@ -6,9 +6,9 @@ program :description, Graphy::DESCRIPTION
 program :help_formatter, :compact
 
 program :help, "Instructions", %(
-  1. Run 'graphy init' to setup files and directories (rerun this after each gem update).
+  1. Run 'graphy init' to setup files and directories.
   2. Edit #{Graphy::CONFIG_FILE}, set your schedule and list processes to monitor.
-  3. Run 'graphy update' to enable monitoring (rerun this each time you modify the config file).
+  3. Run 'graphy update' to enable monitoring (rerun this each time you modify the config file or update the gem).
   4. Run 'graphy config nginx' and paste the output into your Nginx config.
   5. Access reports at http://your.server/graphy.)
 
@@ -16,7 +16,7 @@ default_command :help
 
 command :init do |c|
   c.syntax = 'graphy init'
-  c.summary = "Creates a directory for graphy in /var/lib/graphy and copies all necessary files"
+  c.summary = "Creates a directory for graphy in #{Graphy::ROOT_DIR} and copies all necessary files"
   c.action { Graphy.init }
 end
 
