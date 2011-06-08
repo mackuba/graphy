@@ -49,7 +49,7 @@ module Graphy
             sum += value
           end
         end
-        divisor ? sprintf("%.1f", sum) : sum.to_i
+        (sum.to_i == sum) ? sum.to_i.to_s : sprintf("%.1f", sum)
       end
     end
   end
