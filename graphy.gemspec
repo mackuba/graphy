@@ -12,8 +12,15 @@ Gem::Specification.new do |s|
   s.author = "Jakub Suder"
   s.email = "jakub.suder@gmail.com"
 
-  s.files = ['MIT-LICENSE', 'README.markdown', 'Changelog.markdown', 'Gemfile', 'Gemfile.lock'] + Dir['lib/**/*']
+  s.files = [
+    'MIT-LICENSE', 'README.markdown', 'Changelog.markdown', 'Gemfile', 'Gemfile.lock'
+  ] + Dir['lib/**/*'] + Dir['spec/**/*']
+
   s.executables = ['graphy']
 
   s.add_dependency 'commander', '~> 4.0'
+
+  s.add_development_dependency 'rspec', '~> 2.5'
+  s.add_development_dependency 'rake'
+  s.add_development_dependency 'mocha'
 end

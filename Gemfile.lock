@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    graphy (0.1)
+    graphy (1.0.0.beta.2)
       commander (~> 4.0)
 
 GEM
@@ -9,7 +9,19 @@ GEM
   specs:
     commander (4.0.4)
       highline (>= 1.5.0)
+    diff-lcs (1.1.2)
     highline (1.6.1)
+    mocha (0.9.8)
+      rake
+    rake (0.8.7)
+    rspec (2.5.0)
+      rspec-core (~> 2.5.0)
+      rspec-expectations (~> 2.5.0)
+      rspec-mocks (~> 2.5.0)
+    rspec-core (2.5.2)
+    rspec-expectations (2.5.0)
+      diff-lcs (~> 1.1.2)
+    rspec-mocks (2.5.0)
 
 PLATFORMS
   ruby
@@ -17,3 +29,6 @@ PLATFORMS
 DEPENDENCIES
   commander (~> 4.0)
   graphy!
+  mocha
+  rake
+  rspec (~> 2.5)
