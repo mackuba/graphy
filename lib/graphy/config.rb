@@ -17,9 +17,10 @@ module Graphy
 
     def initialize(name, options = {})
       @name = name.to_s
-      @type = options[:type] || @name.to_sym
+      @type = (options[:type] || @name).to_sym
       @watches = []
       raise "Invalid monitor name: #{name}" if @name !~ /^[\w\-\.]+$/
+      raise "Invalid monitor type: #{type}" if monitor.nil?
     end
 
     def watch(name, options = {})
