@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.name = "graphy"
   s.version = Graphy::VERSION
   s.summary = Graphy::DESCRIPTION
-  s.homepage = "http://github.com/psionides/graphy"
+  s.homepage = "http://github.com/jsuder/graphy"
 
   s.author = "Jakub Suder"
   s.email = "jakub.suder@gmail.com"
